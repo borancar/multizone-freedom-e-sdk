@@ -74,7 +74,7 @@ sudo apt install openjdk-8-jre-headless
 
 ### For More Information ###
 
-See MultiZone_Manual.v010.pdf
+See [MultiZone_Manual](https://github.com/hex-five/multizone-freedom-e-sdk/blob/master/MultiZone_Manual.v1.01.pdf)
 
 Documentation, forums, and more examples of prebuilt secure implementations of common open source stack components:
 
