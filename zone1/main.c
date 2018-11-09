@@ -36,6 +36,22 @@ void trap_0x2_handler(void){
 
 }
 
+void trap_0x3_handler(void)__attribute__((interrupt("user")));
+void trap_0x3_handler(void){
+
+	printf("\e7"); 		// save curs pos
+	printf("\e[r"); 	// scroll all screen
+	printf("\e[2M"); 	// scroll up up
+	printf("\e8");   	// restore curs pos
+	printf("\e[2A"); 	// curs up 2 lines
+	printf("\e[2L"); 	// insert 2 lines
+
+	printf("\rZ1 > timer expired : %lu", (unsigned long)(ECALL_CSRR_MTIME()*1000/32768));
+
+	printf("\e8");   	// restore curs pos
+
+}
+
 void trap_0x4_handler(void)__attribute__((interrupt("user")));
 void trap_0x4_handler(void){
 
@@ -342,6 +358,7 @@ int main (void) {
 	ECALL_TRP_VECT(0x0, trap_0x0_handler); // 0x0 Instruction address misaligned
 	ECALL_TRP_VECT(0x1, trap_0x1_handler); // 0x1 Instruction access fault
 	ECALL_TRP_VECT(0x2, trap_0x2_handler); // 0x2 Illegal Instruction
+	ECALL_TRP_VECT(0x3, trap_0x3_handler); // 0x3 Soft timer
     ECALL_TRP_VECT(0x4, trap_0x4_handler); // 0x4 Load address misaligned
     ECALL_TRP_VECT(0x5, trap_0x5_handler); // 0x5 Load access fault
     ECALL_TRP_VECT(0x6, trap_0x6_handler); // 0x6 Store/AMO address misaligned
@@ -452,8 +469,18 @@ int main (void) {
 		} else if (tk1 != NULL && strcmp(tk1, "reboot")==0){
 			asm ("j _start");
 
+		} else if (tk1 != NULL && strcmp(tk1, "timer")==0){
+			if (tk2 != NULL){
+				const uint64_t ms = abs(strtoull(tk2, NULL, 10));
+				const uint64_t T0 = ECALL_CSRR_MTIME();
+				const uint64_t T1 = T0 + ms*32768/1000;
+				ECALL_CSRR_MTIMECMP(T1);
+				printf("timer set T0=%lu, T1=%lu \n", (unsigned long)(T0*1000/32768),
+													  (unsigned long)(T1*1000/32768) );
+			} else printf("Syntax: timer ms \n");
+
 		} else
-			printf("Commands: load store exec send recv yield stats reboot \n");
+			printf("Commands: load store exec send recv yield stats timer reboot \n");
 
 	}
 

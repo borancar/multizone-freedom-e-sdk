@@ -72,6 +72,50 @@ If java is not installed in your system:
 sudo apt install openjdk-8-jre-headless
 ```
 
+### Soft timers (branch soft-timer) 
+
+> Remove this section from the README.MD once merged into the MultiZone Manual on master
+
+MultiZone Security API (Page #26)
+
+**void ECALL_CSRR_MTIMECMP(uint64_t)**
+
+Secure user-mode emulation of the machine-mode timer compare register (mtimecmp). Causes a trap 0x3 exception when the mtime register contains a value greater than or equal to the value assigned. Each zone has its own secure instance of timer and trap handler. Per RISC-V specs this is a one-shot timer: once set it will execute its callback function only once. Note that mtime and mtimecmp size is 64-bit even on rv32 architecture. Registering the trap 0x3 handler sets the value of mtimecmp to zero to prevent spurious interrupts. If the timer is set but no handler is registered the exception is ignored.
+
+Example: 10ms period free-running timer - see zone1/main.c
+
+```
+#include <libhexfive.h>
+
+...
+
+void trap_0x3_handler(void)__attribute__((interrupt("user")));
+void trap_0x3_handler(void){
+
+   // do something
+
+	// restart the timer
+	uint64_t T = 10; // ms
+	uint64_t T0 = ECALL_CSRR_MTIME();
+	uint64_t T1 = T0 + T*32768/1000;
+	ECALL_CSRR_MTIMECMP(T1);
+
+}
+
+...
+
+main () {
+
+	ECALL_TRP_VECT(0x3, trap_0x3_handler); // register 0x3 Soft timer
+
+	while(1){
+		
+		// do many things
+
+	}
+}
+```
+
 ### For More Information ###
 
 See [MultiZone_Manual](https://github.com/hex-five/multizone-freedom-e-sdk/blob/master/MultiZone_Manual.v1.01.pdf)
