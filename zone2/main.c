@@ -8,10 +8,6 @@
 #include "plic/plic_driver.h"
 #include <libhexfive.h>
 
-#ifndef _SIFIVE_COREPLEXIP_ARTY_H
-#error 'coreplexip_welcome' demo only supported for Coreplex IP Eval Kits
-#endif
-
 static const char sifive_msg[] = "\n\r\
 \n\r\
                 SIFIVE, INC.\n\r\
@@ -124,21 +120,6 @@ void button_1_handler(void){ // local interrupt
 
 }
 
-void button_2_handler(void)__attribute__((interrupt("user")));
-void button_2_handler(void){ // local interrupt
-
-	ECALL_SEND(1, (int[4]){221,0,0,0});
-
-	LED1_BLU_ON; LED1_GRN_OFF; LED1_RED_OFF;
-
-	volatile uint64_t *  now = (volatile uint64_t*)(CLINT_CTRL_ADDR + CLINT_MTIME);
-	volatile uint64_t then = *now + 3*32768;
-	while (*now < then) ECALL_YIELD();
-
-	LED1_RED_OFF; LED1_GRN_OFF; LED1_BLU_OFF;
-
-}
-
 /*configures Button0 as a global gpio irq*/
 void b0_irq_init()  {
 
@@ -160,7 +141,7 @@ void b0_irq_init()  {
     PLIC_enable_interrupt (&g_plic, INT_DEVICE_BUTTON_0);
     PLIC_set_priority(&g_plic, INT_DEVICE_BUTTON_0, 2);
 
-    ECALL_IRQ_VECT(11, button_0_handler);
+    ECALL_IRQ_VECT(INT_DEVICE_BUTTON_0, button_0_handler);
 
 }
 
@@ -178,31 +159,13 @@ void b1_irq_init()  {
     GPIO_REG(GPIO_RISE_IE)    |= (1<<BUTTON_1_OFFSET);
 
     //enable the interrupt
-    ECALL_IRQ_VECT(16+LOCAL_INT_BTN_1, button_1_handler); // set_csr(mie, MIP_MLIP(LOCAL_INT_BTN_1));
-}
-
-/*configures Button2 as a local interrupt*/
-void b2_irq_init()  {
-
-    //dissable hw io function
-    GPIO_REG(GPIO_IOF_EN )    &=  ~(1 << BUTTON_2_OFFSET);
-
-    //set to input
-    GPIO_REG(GPIO_INPUT_EN)   |= (1<<BUTTON_2_OFFSET);
-    GPIO_REG(GPIO_PULLUP_EN)  |= (1<<BUTTON_2_OFFSET);
-
-    //set to interrupt on rising edge
-    GPIO_REG(GPIO_RISE_IE)    |= (1<<BUTTON_2_OFFSET);
-
-    //enable the interrupt
-    ECALL_IRQ_VECT(16+LOCAL_INT_BTN_2, button_2_handler); // set_csr(mie, MIP_MLIP(LOCAL_INT_BTN_1));
+    ECALL_IRQ_VECT(INT_DEVICE_BUTTON_1, button_1_handler); // set_csr(mie, MIP_MLIP(LOCAL_INT_BTN_1));
 }
 
 int main (void){
 
   b0_irq_init();
   b1_irq_init();
-  b2_irq_init();
 
   // 115200 Baud Rate at (65 / 2) MHz
   UART0_REG(UART_REG_DIV) = 282;

@@ -2,7 +2,9 @@
 
 ifneq ($(BOARD),coreplexip-e31-arty)
 ifneq ($(BOARD),coreplexip-e51-arty)
+ifneq ($(BOARD),freedom-e300-arty)
   $(error Unsupported board $(BOARD))
+endif
 endif
 endif
 

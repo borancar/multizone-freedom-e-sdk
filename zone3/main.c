@@ -11,8 +11,8 @@
 
 static volatile int led = GREEN_LED_OFFSET;
 
-void button_3_handler(void)__attribute__((interrupt("user")));
-void button_3_handler(void){ // local interrupt
+void button_2_handler(void)__attribute__((interrupt("user")));
+void button_2_handler(void){ // local interrupt
 
 	GPIO_REG(GPIO_OUTPUT_VAL) &= ~(0x1 << led); // LED OFF
 
@@ -28,25 +28,25 @@ void button_3_handler(void){ // local interrupt
 	then = *now + 500*32768/1000;
 	while (*now < then) ECALL_YIELD();
 
-	GPIO_REG(GPIO_RISE_IP) |= (1<<BUTTON_3_OFFSET);
+	GPIO_REG(GPIO_RISE_IP) |= (1<<BUTTON_2_OFFSET);
 
 }
 
-/*configures Button3 as a local interrupt*/
-void b3_irq_init() {
+/*configures Button2 as a local interrupt*/
+void b2_irq_init() {
 
     //dissable hw io function
-    GPIO_REG(GPIO_IOF_EN ) &=  ~(1 << BUTTON_3_OFFSET);
+    GPIO_REG(GPIO_IOF_EN ) &=  ~(1 << BUTTON_2_OFFSET);
 
     //set to input
-    GPIO_REG(GPIO_INPUT_EN)   |= (1<<BUTTON_3_OFFSET);
-    GPIO_REG(GPIO_PULLUP_EN)  |= (1<<BUTTON_3_OFFSET);
+    GPIO_REG(GPIO_INPUT_EN)   |= (1<<BUTTON_2_OFFSET);
+    GPIO_REG(GPIO_PULLUP_EN)  |= (1<<BUTTON_2_OFFSET);
 
     //set to interrupt on rising edge
-    GPIO_REG(GPIO_RISE_IE)    |= (1<<BUTTON_3_OFFSET);
+    GPIO_REG(GPIO_RISE_IE)    |= (1<<BUTTON_2_OFFSET);
 
     //enable the interrupt
-    ECALL_IRQ_VECT(16+LOCAL_INT_BTN_3, button_3_handler);
+    ECALL_IRQ_VECT(INT_DEVICE_BUTTON_2, button_2_handler);
 }
 
 
@@ -55,8 +55,8 @@ int main (void){
 	// Configure LEDs as outputs
 	GPIO_REG(GPIO_OUTPUT_EN) =  ((0x1<< RED_LED_OFFSET) | (0x1<< GREEN_LED_OFFSET) | (0x1 << BLUE_LED_OFFSET));
 
-	// Configure Button3 as a local interrupt
-	b3_irq_init();
+	// Configure Button2 as a local interrupt
+	b2_irq_init();
 
 	while(1){
 
